@@ -1,0 +1,232 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+  CUSTOMER
+}
+
+enum OrderStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  ALLOCATED
+  PREPARING
+  READY
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
+}
+
+enum FulfillmentMethod {
+  PICKUP
+  DELIVERY
+}
+
+enum AllocationStatus {
+  UNALLOCATED
+  ALLOCATED
+  BACKORDERED
+  RELEASED
+}
+
+enum WorkStatus {
+  NOT_REQUIRED
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+model User {
+  id        String     @id @default(cuid())
+  name      String
+  phone     String?    @unique
+  email     String?    @unique
+  role      Role
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  students  Student[]
+  auditLogs AuditLog[]
+}
+
+model School {
+  id              String          @id @default(cuid())
+  name            String
+  year            Int
+  fittingStartsAt DateTime?
+  fittingEndsAt   DateTime?
+  students        Student[]
+  products        SchoolProduct[]
+
+  @@unique([name, year])
+}
+
+model Student {
+  id             String   @id @default(cuid())
+  name           String
+  birthDate      DateTime
+  gender         String
+  admissionYear  Int
+  admissionGrade Int
+  previousSchool String?
+  heightCm       Int?
+  weightKg       Int?
+  phone          String?
+  guardianPhone  String
+  userId         String?
+  schoolId       String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User?    @relation(fields: [userId], references: [id])
+  school         School   @relation(fields: [schoolId], references: [id])
+  orders         Order[]
+
+  @@index([name, previousSchool])
+}
+
+model Product {
+  id          String          @id @default(cuid())
+  category    String
+  itemType    String
+  basePattern String
+  name        String
+  skus        Sku[]
+  schools     SchoolProduct[]
+}
+
+model SchoolProduct {
+  schoolId   String
+  productId  String
+  price      Int
+  isRequired Boolean @default(false)
+  school     School  @relation(fields: [schoolId], references: [id])
+  product    Product @relation(fields: [productId], references: [id])
+
+  @@id([schoolId, productId])
+}
+
+model Sku {
+  id            String              @id @default(cuid())
+  productId     String
+  code          String              @unique
+  size          String
+  product       Product             @relation(fields: [productId], references: [id])
+  inventory     Inventory?
+  orderItems    OrderItem[]
+  purchaseItems PurchaseOrderItem[]
+}
+
+model Inventory {
+  id        String   @id @default(cuid())
+  skuId     String   @unique
+  onHand    Int      @default(0)
+  reserved  Int      @default(0)
+  version   Int      @default(0)
+  updatedAt DateTime @updatedAt
+  sku       Sku      @relation(fields: [skuId], references: [id])
+}
+
+model Order {
+  id          String       @id @default(cuid())
+  orderNumber String       @unique
+  studentId   String
+  status      OrderStatus  @default(DRAFT)
+  approvedAt  DateTime?
+  readyAt     DateTime?
+  receivedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  student     Student      @relation(fields: [studentId], references: [id])
+  items       OrderItem[]
+  payments    Payment[]
+  receipts    Receipt[]
+  messages    MessageLog[]
+}
+
+model OrderItem {
+  id          String            @id @default(cuid())
+  orderId     String
+  skuId       String
+  quantity    Int
+  unitPrice   Int
+  fulfillment FulfillmentMethod @default(PICKUP)
+  allocation  AllocationStatus  @default(UNALLOCATED)
+  alteration  WorkStatus        @default(NOT_REQUIRED)
+  nameTag     WorkStatus        @default(NOT_REQUIRED)
+  preparedQty Int               @default(0)
+  receivedQty Int               @default(0)
+  order       Order             @relation(fields: [orderId], references: [id])
+  sku         Sku               @relation(fields: [skuId], references: [id])
+
+  @@unique([orderId, skuId, fulfillment])
+}
+
+model PurchaseOrder {
+  id         String              @id @default(cuid())
+  number     String              @unique
+  status     String              @default("DRAFT")
+  orderedAt  DateTime?
+  receivedAt DateTime?
+  createdAt  DateTime            @default(now())
+  items      PurchaseOrderItem[]
+}
+
+model PurchaseOrderItem {
+  id               String        @id @default(cuid())
+  purchaseOrderId  String
+  skuId            String
+  quantity         Int
+  receivedQuantity Int           @default(0)
+  purchaseOrder    PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  sku              Sku           @relation(fields: [skuId], references: [id])
+}
+
+model Payment {
+  id      String   @id @default(cuid())
+  orderId String
+  amount  Int
+  method  String
+  paidAt  DateTime @default(now())
+  order   Order    @relation(fields: [orderId], references: [id])
+}
+
+model Receipt {
+  id            String   @id @default(cuid())
+  orderId       String
+  receiverName  String
+  receiverPhone String?
+  signatureData String?
+  createdAt     DateTime @default(now())
+  order         Order    @relation(fields: [orderId], references: [id])
+}
+
+model MessageLog {
+  id        String   @id @default(cuid())
+  orderId   String
+  recipient String
+  template  String
+  status    String   @default("PENDING")
+  error     String?
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([entityType, entityId])
+}
