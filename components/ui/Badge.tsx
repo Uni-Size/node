@@ -1,0 +1,32 @@
+import type { ReactNode } from 'react';
+
+export interface BadgeProps {
+  children: ReactNode;
+  variant?: 'default' | 'success' | 'warning' | 'error' | 'info';
+  size?: 'small' | 'medium';
+}
+
+const variantStyles = {
+  default: 'bg-gray-100 text-gray-700',
+  success: 'bg-green-050 text-green-700',
+  warning: 'bg-yellow-050 text-yellow-700',
+  error: 'bg-red-050 text-red-700',
+  info: 'bg-blue-050 text-blue-700',
+};
+
+const sizeStyles = {
+  small: 'px-2 py-0.5 text-12',
+  medium: 'px-3 py-1 text-14',
+};
+
+export const Badge = ({
+  children,
+  variant = 'default',
+  size = 'medium',
+}: BadgeProps) => {
+  return (
+    <span className={`inline-flex items-center justify-center rounded-full font-medium whitespace-nowrap ${variantStyles[variant]} ${sizeStyles[size]}`}>
+      {children}
+    </span>
+  );
+};

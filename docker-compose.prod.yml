@@ -1,0 +1,62 @@
+# EC2 단일 서버 배포용. 사용법은 README "EC2 배포" 참고.
+# ponytail: DB가 같은 인스턴스에 있음. 실제 운영 전 RDS로 이전 (pg_dump → restore, DATABASE_URL 교체).
+x-db-url: &db-url postgresql://postgres:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD 필요}@db:5432/unisize?schema=public
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: unisize
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d unisize"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # 배포할 때마다 마이그레이션 + 시드(관리자 계정·데모 데이터, upsert라 반복 실행 안전) 후 종료
+  migrate:
+    build:
+      context: .
+      target: builder
+    environment:
+      DATABASE_URL: *db-url
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?ADMIN_EMAIL 필요}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD 필요}
+    command: sh -c "npx prisma migrate deploy && npm run db:seed"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: *db-url
+      APP_ENV: production
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?SITE_ADDRESS 필요, 예 3-35-1-2.sslip.io}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - app
+
+volumes:
+  db_data:
+  caddy_data:

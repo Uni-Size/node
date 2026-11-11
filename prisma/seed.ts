@@ -1,8 +1,20 @@
 import { PrismaClient, Role } from "@prisma/client";
+import { randomBytes, scryptSync } from "node:crypto";
 const db = new PrismaClient();
 
+function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  return `${salt}:${scryptSync(password, salt, 64).toString("hex")}`;
+}
+
 async function main() {
-  const admin = await db.user.upsert({ where: { email: "admin@unisize.local" }, update: {}, create: { name: "관리자", email: "admin@unisize.local", role: Role.ADMIN } });
+  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@unisize.local";
+  const adminPassword = process.env.ADMIN_PASSWORD ?? "change-this-before-production";
+  const admin = await db.user.upsert({
+    where: { email: adminEmail },
+    update: { passwordHash: hashPassword(adminPassword), role: Role.ADMIN },
+    create: { name: "관리자", email: adminEmail, passwordHash: hashPassword(adminPassword), role: Role.ADMIN },
+  });
   const school = await db.school.upsert({ where: { name_year: { name: "서울중학교", year: 2027 } }, update: {}, create: { name: "서울중학교", year: 2027 } });
   const student = await db.student.findFirst({ where: { name: "김민준", schoolId: school.id } })
     ?? await db.student.create({ data: { name: "김민준", birthDate: new Date("2014-05-12"), gender: "남", admissionYear: 2027, admissionGrade: 1, guardianPhone: "010-1234-5678", schoolId: school.id } });

@@ -1,3 +1,4 @@
+import type { BadgeProps } from "@/components/ui/Badge";
 import { AllocationStatus, OrderStatus, WorkStatus } from "@prisma/client";
 
 export const orderStatusLabel: Record<OrderStatus, string> = {
@@ -15,9 +16,13 @@ export function orderItemStatus(item: { preparedQty: number; quantity: number; a
   return "승인 대기";
 }
 
-export function statusClass(status: OrderStatus) {
-  if (status === "READY" || status === "RECEIVED") return "s2";
-  if (status === "PENDING_APPROVAL") return "s1";
-  if (status === "APPROVED") return "s3";
-  return "s0";
+/** 주문 상태 → Badge variant. 승인 대기만 주의(warning), 진행 중은 info, 수령 단계는 success. */
+export function statusVariant(status: OrderStatus): BadgeProps["variant"] {
+  switch (status) {
+    case "PENDING_APPROVAL": return "warning";
+    case "APPROVED": case "ALLOCATED": case "PREPARING": return "info";
+    case "READY": case "PARTIALLY_RECEIVED": case "RECEIVED": return "success";
+    case "CANCELLED": return "error";
+    default: return "default";
+  }
 }

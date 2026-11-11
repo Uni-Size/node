@@ -1,0 +1,70 @@
+import type { ReactNode } from 'react';
+
+export interface Column<T> {
+  key: keyof T | string;
+  header: string;
+  width?: string;
+  align?: 'left' | 'center' | 'right';
+  render?: (item: T, index: number) => ReactNode;
+}
+
+export interface TableProps<T> {
+  columns: Column<T>[];
+  data: T[];
+  onRowClick?: (item: T) => void;
+  emptyMessage?: ReactNode;
+  getRowKey?: (item: T, index: number) => string | number;
+}
+
+export const Table = <T extends object>({
+  columns,
+  data,
+  onRowClick,
+  emptyMessage = '데이터가 없습니다.',
+  getRowKey,
+}: TableProps<T>) => {
+  return (
+    <div className="w-full overflow-x-auto bg-white rounded-xl border border-gray-200">
+      <table className="w-full border-collapse">
+        <thead className="bg-gray-100">
+          <tr>
+            {columns.map((column) => (
+              <th
+                key={String(column.key)}
+                className={`p-4 text-14 font-semibold text-gray-700 border-b border-gray-200 whitespace-nowrap ${column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'}`}
+                style={{ width: column.width }}
+              >
+                {column.header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody className="bg-white">
+          {data.length === 0 ? (
+            <tr>
+              <td colSpan={columns.length} className="p-12 text-center text-14 text-gray-500">
+                {emptyMessage}
+              </td>
+            </tr>
+          ) : (
+            data.map((item, index) => (
+              <tr
+                key={getRowKey ? getRowKey(item, index) : index}
+                className={`transition-colors duration-200 ease-in-out hover:bg-gray-100 [&:last-child_td]:border-b-0 ${onRowClick ? 'cursor-pointer' : ''}`}
+                onClick={onRowClick ? () => onRowClick(item) : undefined}
+              >
+                {columns.map((column) => (
+                  <td key={String(column.key)} className={`p-4 text-14 text-gray-900 border-b border-gray-200 ${column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : ''}`}>
+                    {column.render
+                      ? column.render(item, index)
+                      : String(item[column.key as keyof T] ?? '')}
+                  </td>
+                ))}
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+};

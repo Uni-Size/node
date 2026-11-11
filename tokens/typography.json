@@ -1,0 +1,83 @@
+{
+  "text": {
+    "11": {
+      "value": "11px"
+    },
+    "11--line-height": {
+      "value": "calc(16 / 11)"
+    },
+    "12": {
+      "value": "12px"
+    },
+    "12--line-height": {
+      "value": "calc(16 / 12)"
+    },
+    "13": {
+      "value": "13px"
+    },
+    "13--line-height": {
+      "value": "calc(20 / 13)"
+    },
+    "14": {
+      "value": "14px"
+    },
+    "14--line-height": {
+      "value": "calc(20 / 14)"
+    },
+    "15": {
+      "value": "15px"
+    },
+    "15--line-height": {
+      "value": "calc(22 / 15)"
+    },
+    "16": {
+      "value": "16px"
+    },
+    "16--line-height": {
+      "value": "calc(24 / 16)"
+    },
+    "17": {
+      "value": "17px"
+    },
+    "17--line-height": {
+      "value": "calc(24 / 17)"
+    },
+    "18": {
+      "value": "18px"
+    },
+    "18--line-height": {
+      "value": "calc(28 / 18)"
+    },
+    "20": {
+      "value": "20px"
+    },
+    "20--line-height": {
+      "value": "calc(28 / 20)"
+    },
+    "24": {
+      "value": "24px"
+    },
+    "24--line-height": {
+      "value": "calc(32 / 24)"
+    },
+    "32": {
+      "value": "32px"
+    },
+    "32--line-height": {
+      "value": "calc(40 / 32)"
+    },
+    "48": {
+      "value": "48px"
+    },
+    "48--line-height": {
+      "value": "calc(56 / 48)"
+    }
+  },
+  "font": {
+    "family": {
+      "pretendard": {
+        "value": "'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+      }
+    }
+  }
+}

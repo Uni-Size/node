@@ -45,15 +45,29 @@ enum WorkStatus {
 }
 
 model User {
-  id        String     @id @default(cuid())
-  name      String
-  phone     String?    @unique
-  email     String?    @unique
-  role      Role
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  students  Student[]
-  auditLogs AuditLog[]
+  id           String     @id @default(cuid())
+  name         String
+  phone        String?    @unique
+  email        String?    @unique
+  role         Role
+  passwordHash String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  students     Student[]
+  auditLogs    AuditLog[]
+  sessions     Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model School {
@@ -136,6 +150,7 @@ model Inventory {
 model Order {
   id          String       @id @default(cuid())
   orderNumber String       @unique
+  idempotencyKey String?   @unique // 클라이언트 재시도 시 중복 주문 방지
   studentId   String
   status      OrderStatus  @default(DRAFT)
   approvedAt  DateTime?
