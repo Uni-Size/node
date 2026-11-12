@@ -3,8 +3,9 @@ import { AdminLoginForm } from "@/components/admin-login-form";
 import { Brand } from "@/components/brand";
 import { getCurrentUser } from "@/lib/auth";
 
-// 개발 환경에서만 seed 관리자 계정을 미리 채운다. 운영 빌드에서는 넘기지 않는다.
-const devDefaults = process.env.NODE_ENV === "production" ? undefined : {
+// ponytail: 외부 플로우 확인용으로 운영에서도 관리자 계정을 미리 채운다(페이지 소스에 비밀번호 노출).
+// 실사용자 받기 전에 `process.env.NODE_ENV === "production" ? undefined :` 조건을 되살릴 것.
+const devDefaults = {
   email: process.env.ADMIN_EMAIL ?? "admin@unisize.local",
   password: process.env.ADMIN_PASSWORD ?? "change-this-before-production",
 };
