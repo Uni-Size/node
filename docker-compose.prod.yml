@@ -39,6 +39,9 @@ services:
     environment:
       DATABASE_URL: *db-url
       APP_ENV: production
+      # 로그인 폼 미리 채우기용(app/staff-login). 테스트 끝나면 함께 제거.
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
     depends_on:
       migrate:
         condition: service_completed_successfully
